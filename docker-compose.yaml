@@ -1,0 +1,52 @@
+version: '3.1'
+
+services:
+  pg_master:
+    image: postgres:latest
+    container_name: master
+    environment:
+      POSTGRES_DB: testDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_master_data:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d/script.sh:/docker-entrypoint-initdb.d/script.sh
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres_network
+
+  pg_replica:
+    image: postgres:latest
+    container_name: replica
+    environment:
+      POSTGRES_DB: testDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_replica_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - postgres_network
+    depends_on:
+      - pg_master
+
+  pg_client:
+    image: postgres:latest
+    container_name: client
+    entrypoint: ['bash']
+    tty: true
+    environment:
+      POSTGRES_DB: testDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - postgres_network
+
+volumes:
+  pg_master_data:
+  pg_replica_data:
+
+networks:
+  postgres_network:
